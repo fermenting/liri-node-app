@@ -1,37 +1,16 @@
 // Language Interpretation & Recognition Interface
 
-//Search Avenues
-//Spotify for songs
-//Bands in Town for concerts
-//OMDB for Movies KEY 187ccf02
-
 require("dotenv").config();
 
-//Add code required to import 'keys.js' and store in variable
-//var spotify = new Spotify(keys.spotify);
-
-//commands
-//concert-this
-//spotify-this-song
-//movie-this
-//do-what-it-says
-
-//get the key data:
 var fs = require("fs")
 
 var Spotify = require('node-spotify-api');
 
-//SPOTIFY EXMAPLE from NPM
-// var spotify = new Spotify({
-//   id: <your spotify client id>,
-//   secret: <your spotify client secret>
-// });
-
-fs.readFile("keys.js", "utf8", function (error) {
-  if (error) {
-    return console.log("keys.js error")
-  }
-  var spotify = new Spotify(keys.spotify);
+//spotify config
+var keys = require("./keys.js");
+var spotify = new Spotify({
+    id: keys.spotify.id,
+    secret: keys.spotify.secret
 });
 
 var command = process.argv[2].toLowerCase();
@@ -56,57 +35,69 @@ switch (command) {
 }
 
 function concertThis() {
-  var bandsURL = "https://rest.bandsintown.com/artists/" + term + "/events?app_id=codingbootcamp"
-  //axios request
-  //name of venue
-  //venue location
-  //date of event, using moment to get MM/DD/YYYY
+  
+  if (term === undefined) {
+    term = "lil+dicky"
+  };
+  
+  axios.get("https://rest.bandsintown.com/artists/" + term + "/events?app_id=codingbootcamp")
+    .then(function (error, response) {
 
+      if (error) {
+        console.log("That band isn't coming to this town!.\nAKA bands in town error.")
+      }
+
+      //axios request
+      //name of venue
+      //venue location
+      //date of event, using moment to get MM/DD/YYYY
+    })
 };
 
 function movieThis() {
-  axios.get("http://www.omdbapi.com/?t=" + term + "&apikey=trilogy").then(
-    function (error, response) {
-      if (error){
-         // if no movie input, default to "mr. nobody"
+
+  // if no movie input, default to "mr. nobody"
+  if (term === undefined) {
+    term = "mr.+nobody"
+  };
+  axios.get("http://www.omdbapi.com/?t=" + term + "&apikey=trilogy")
+    .then(function (error, response) {
+
+      if (error) {
+        console.log("I'm sorry Dave, I can't let you do that.\nAKA movie error.")
       }
 
       var omdb = response.data
 
       //  * Title of the movie.
-      console.log(omdb.Title)
+      console.log("Title: " + omdb.Title)
 
       // * Year the movie came out.
-      console.log(omdb.Year)
-      
+      console.log("Year: " + omdb.Year)
+
       // * IMDB Rating of the movie.
-      console.log("The movie's rating is: " + omdb.imdbRating);
+      console.log("Rating: " + omdb.imdbRating);
 
       // * Rotten Tomatoes Rating of the movie.
-      console.log(omdb.Ratings[1].Source)
+      console.log("Rotten Tomatoes: " + omdb.Ratings[1].Source)
 
       // * Country where the movie was produced.
-      console.log(omdb.Country)
+      console.log("Country: " + omdb.Country)
 
       // * Language of the movie.
-      console.log(omdb.Language)
+      console.log("Language: " + omdb.Language)
 
       // * Plot of the movie.
-      console.log(omdb.Plot)
+      console.log("Plot: " + omdb.Plot)
 
       // * Actors in the movie.
-      console.log(omdb.Actors)
+      console.log("Actors: " + omdb.Actors)
 
-    }
-  );
-
-
-
- 
+    });
 };
 
-function spotifyThis() {
 
+function spotifyThis() {
 
   spotify.search({ type: 'track', query: 'All the Small Things' }, function (err, data) {
     if (err) {
@@ -124,14 +115,19 @@ function spotifyThis() {
 
     }
     console.log(data);
+
     //Artist(s)
-    console.log(data.artist)
+    for (var i in data.artists) {
+      console.log("Artist: " + data.artists[i].name)
+    }
     //song name
-    console.log(data.name)
+    console.log("Song Name: " + data.name)
+
     //preview link of the song from spotify
-    console.log(data.previewLink)
+    console.log("Preview Link: " + data.preview_url)
+
     //album the song is on
-    console.log(data.album)
+    console.log("Album: " + data.album.name)
   });
 
 
@@ -140,6 +136,9 @@ function spotifyThis() {
 function doThis() {
   //using fs, grab text from 'random.txt'
   fs.readFile("random.txt", "utf8", function (error, data) {
+    if (error){
+      return console.log(error);
+    }
     term = data
   });
   //using a command, plug into a search.
